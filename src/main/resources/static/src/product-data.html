@@ -1,0 +1,52 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="product-data">
+  <template>
+    <iron-ajax auto
+          url="/api/products"
+          handle-as="json"
+          on-response="_handleResponse"></iron-ajax>
+  </template>
+
+  <script>
+    class ProductData extends Polymer.Element {
+      static get is() { return 'product-data'; }
+
+      static get properties(){
+        return {
+          productId:String,
+          products: {
+            type: Array,
+            notify: true
+          },
+          product: {
+            type: Object,
+            computed: '_computeProduct(products, productId)',
+            notify: true
+          }
+        }
+      }
+
+      _computeProduct(products, id){
+        // console.log(id);
+
+         if (!products || !id) {
+            return;
+          }
+          for (let i = 0, item; item = products[i]; ++i) {
+            if (item.productId == id) {
+              return item;
+            }
+          }
+      }
+
+      _handleResponse(e){
+        this.products = e.detail.response;
+      }
+
+    }
+
+    window.customElements.define(ProductData.is, ProductData);
+  </script>
+</dom-module>

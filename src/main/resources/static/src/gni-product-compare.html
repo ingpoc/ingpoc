@@ -1,0 +1,316 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-datatable-api/paper-datatable-api.html">
+<link rel="import" href="../bower_components/paper-datatable-api/paper-datatable-api-column.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-item/paper-checkbox.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+
+
+
+<link rel="import" href="product-data.html">
+<link rel="import" href="card-item.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="gni-product-compare">
+  <template>
+     <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+        
+        --paper-listbox-background-color:#eeeeee;
+        --paper-listbox-color:#333;
+      }
+
+      
+     .product-tab {
+        padding: 0px;
+        width:250px;
+      }
+      
+      .floatRight{
+      	float:right;
+      	width:20%;
+      
+      }
+      
+      .floatLeft{
+      	float:left;
+      	width:80%;
+      
+      }
+      .fullWidth{
+      	width:100%;
+      }
+
+      paper-item {
+        cursor: pointer;
+      }
+
+      .product-tab paper-item.iron-selected {
+          background: #fb5211;
+          color: #ffffff;
+      }
+      
+      .demo {
+		width:100%;
+		height:100%;
+		border:1px solid #A6A6A6;
+		border-collapse:collapse;
+		padding:5px;
+	}
+	.demo th {
+		border:1px solid #A6A6A6;
+		padding:5px;
+		background:#FC8D12;
+	}
+	.demo td {
+		border:1px solid #A6A6A6;
+		padding:5px;
+		background:#E6E6E6;
+	}
+	.comapareBtn{
+		float:right;
+		padding:10px;
+	}
+	.buttonBar{
+		width:100%;
+		padding-top:10px;
+		padding-bottom: 10px;
+		background-color: #ff6600;
+	}
+    </style>
+
+
+    <!--<app-route
+        route="{{route}}"
+        pattern="/:productId"
+        data="{{routeData}}"></app-route>-->
+
+    <product-data products="{{products}}"></product-data>
+
+    <app-location route="{{route}}"></app-location>
+
+    <div class="flex-container">
+      
+      
+      <card-item primary-item >
+        <span slot="title">Product Compare Page</span>
+        <span slot="description">
+        	
+		<paper-listbox class="fullWidth" attr-for-selected="item-id" selected="{{formData.productId}}" class="product-tab">
+                    <template is="dom-repeat" items="[[products]]">
+                        <paper-item item-id="[[item.productId]]">
+                        <div class="floatLeft">[[item.name]]</div>
+                        <div class="floatRight"><paper-checkbox on-change="selectProduct">Compare</paper-checkbox></div>
+                        </paper-item>
+                      </template>  
+           </paper-listbox>
+           <!-- <div class="buttonBar">
+           	<paper-button class="action" on-click="_compare" class="comapareBtn">Compare</paper-button>
+           	
+           
+           </div> -->
+        	
+        	<template is="dom-if" if="{{!renderedCount}}">
+   
+				<table class="demo">
+					<thead>
+						
+						
+							<tr>
+								<th></th>
+								
+								 <template is="dom-repeat" items="[[columns]]">
+									<th>[[getItemName(item)]]</th>
+								</template>
+							
+							
+							</tr>
+		      					
+		      			
+					</thead>
+					<tbody>
+					<template is="dom-repeat" items="[[rows]]">
+		      	
+		      			<tr>
+		      				<td>[[item.faq]]</td>
+		      				<template is="dom-repeat" items="[[columns]]">
+		      					<td>[[getItem(item)]]</td>
+		      				</template>
+		      				
+		      				
+		      			
+		      			
+		      			</tr>
+		      		</template>   
+		      		</tbody>
+				</table>
+			</template>
+			
+		  <template is="dom-bind">
+		    <!-- Fetch an array of users to be shown in the grid -->
+		    <iron-ajax auto url="/stub/products.json" handle-as="json" last-response="{{products}}"></iron-ajax>
+		  </template>
+	
+        </span>
+      </card-item>
+
+    </div>
+  </template>
+
+  <script>
+    class GniProductCompare extends Polymer.Element {
+      static get is() { return 'gni-product-compare'; }
+
+      static get properties(){
+        return {
+        faqs:{
+            type:Array,
+            value: function(){
+                return ["How much ?","Who is it for?","Online activation?"];
+            }
+        },
+        renderedCount:{
+        	type:Boolean,
+        	value:function(){
+        		return true;
+        	}
+        },
+        selectedProducts:{
+        	type:Array,
+            value: function(){
+                return [];
+            }
+        	
+        },
+        columns:{
+        	type:Array,
+            value: function(){
+                return [];
+            }
+        },
+          rows:{
+            type:Array,
+            value: function(){
+                return [];
+            }
+
+          }
+
+        }
+      }
+
+
+      static get observers() {
+          return [
+            // Observer method name, followed by a list of dependencies, in parenthesis
+            '_compareListChanged(columns.*)'
+          ]
+      }
+      
+      _isGreater(){
+    	  return (this.rows.length >0);
+      }
+      getItemName(col){
+    	  let index =  this.columns.indexOf(col);
+    	  let header='';
+    	  if(index > -1){
+    		  header = col["prod"+index+"_name"];
+    	  }
+    	  return header;
+      }
+	
+      getItem(col){
+    	  let index =  this.columns.indexOf(col);
+    	  let detailts='';
+    	  if(index > -1){
+    		  detailts = col["prod"+index+"_desc"];
+    	  }
+    	  return detailts;
+      }
+     _compare(){
+    	let cell={};
+    	let col={}
+    	
+    	//let compareList=[];
+    	// generate faq columns
+    	this.set('rows',[]);
+    	this.set('columns',[]);
+   	  	for(let i=0; i<this.faqs.length;i++){
+   	  		cell={}; 
+   	  		
+   	  		cell.faq=this.faqs[i];
+   	  		
+	   	  	
+	   	 	this.push('rows',cell);
+	   	 
+   	  	}
+   	  	
+   	 for(let j=0; j<this.selectedProducts.length;j++){
+	  		col={};
+	  		col["prod"+j+"_name"]=this.selectedProducts[j].name;
+	 		col["prod"+j+"_desc"]=this.selectedProducts[j].detail;
+	 		this.push('columns',col);
+	  		
+	  	}
+    	
+   	 
+    	console.dir(this.rows);
+    	console.dir(this.columns);
+    	
+   	 	
+   	  
+     }
+	selectProduct(event){
+		if(event.target.checked) {
+	        console.dir(event.model.item);
+	        this.push('selectedProducts',event.model.item);
+	    }else{
+	    	var index = this.selectedProducts.indexOf(event.model.item);
+	        //this.splice('users', index, 1);
+	        if(index > -1){
+	        	this.splice('selectedProducts', index, 1);
+	        }
+	    	console.log("_selectProduct ",index);
+	    	
+	    }
+		
+		if(this.selectedProducts.length===0){
+			this.set('rows',[]);
+			this.set('columns',[]);
+			this.renderedCount =  true;
+		}else
+		if(this.selectedProducts.length>1){
+			this._compare();
+			this.renderedCount =  false;
+		}
+		//this.push('selectedProducts',prod);
+		//console.log("_selectProduct ",this.selectedProducts.length);
+		
+	}
+     _compareListChanged(list){
+        console.log("_compareListChanged");
+       // console.dir(list);
+      //  this.firstName = list.base[0];
+        return list;
+     }
+
+    }
+
+    window.customElements.define(GniProductCompare.is, GniProductCompare);
+  </script>
+</dom-module>
